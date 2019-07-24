@@ -3,6 +3,7 @@ const Koa = require("koa")
 const app = new Koa()
 const router = require("koa-router")()
 const mysql = require("mysql")
+const redis = require("redis")
 const config = {
   host: "localhost",
   user: "root",
@@ -11,12 +12,17 @@ const config = {
   prot: 3306,
   multipleStatements: true
 }
+
+const client = redis.createClient(6379, 'redis')
+client.on("error", function(err) {
+  console.log("redis Error " + err)
+})
 const User = {
   name: faker.name.findName(),
   email: faker.internet.email()
 }
 
-console.log('User', User)
+// console.log('User', User)
 const pool = mysql.createPool(config)
 
 let query = (sql, values) => {
@@ -39,7 +45,24 @@ let query = (sql, values) => {
 }
 
 router.get("/", function(ctx, next) {
+  // client.set("foo_rand000000000000", "OK", redis.print)
   ctx.body = "Hello koa"
+})
+
+router.get("/setredis", (ctx, next) => {
+  let ctx_query = ctx.query
+  let ctx_querystring = ctx.querystring
+  // console.log("ctx_querystring", ctx_query)
+  const {name, vaule} = ctx_query
+  client.set(name, vaule, redis.print)
+})
+
+router.get("/redis", (ctx, next) => {
+  let ctx_querystring = ctx.querystring
+  // console.log("ctx_querystring", ctx_query)
+  client.get(ctx_querystring, function(err, reply) {
+    console.log("我取出来啦", reply.toString()) // Will print `OK`
+  })
 })
 
 router.get("/news", (ctx, next) => {
