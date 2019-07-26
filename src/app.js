@@ -4,6 +4,10 @@ const app = new Koa()
 const router = require("koa-router")()
 const mysql = require("mysql")
 const redis = require("redis")
+const asyncRedis = require("async-redis")
+const {promisify} = require("util")
+const {sequelize, User} = require("./db/sequelize")
+// const UserModule = require('./model/User')
 const config = {
   host: "localhost",
   user: "root",
@@ -13,13 +17,22 @@ const config = {
   multipleStatements: true
 }
 
-const client = redis.createClient(6379, 'redis')
+const client = redis.createClient()
+const clientAsync = asyncRedis.createClient()
+const getAsync = promisify(client.get).bind(client)
+const getAsyncAll = promisify(client.hgetall).bind(client)
 client.on("error", function(err) {
-  console.log("redis Error " + err)
+  console.log("redis Error 123" + err)
 })
-const User = {
-  name: faker.name.findName(),
-  email: faker.internet.email()
+// const User = {
+//   name: faker.name.findName(),
+//   email: faker.internet.email()
+// }
+
+const asyncBlock = async ctx_querystring => {
+  const value = await client.get(ctx_querystring)
+  console.log(value)
+  return value
 }
 
 // console.log('User', User)
@@ -55,14 +68,50 @@ router.get("/setredis", (ctx, next) => {
   // console.log("ctx_querystring", ctx_query)
   const {name, vaule} = ctx_query
   client.set(name, vaule, redis.print)
+  // client.hmset("hosts", "mjr", "1", "another", "23", "home", "1234")
+  const obj = {
+    what: "123",
+    age: 123,
+    qq: [1, 2, 3],
+    dd: {
+      lal: "lala"
+    }
+  }
+  // client.set("obj", JSON.stringify(obj))
+  client.hset("hash key", "hashtest 1", "some value", redis.print)
+  client.hset(["hash key", "hashtest 2", "some other value"], redis.print)
+  // clientAsync
+  // client.hkeys("hash key hashtest 2", function(err, replies) {
+  //   console.log(replies.length + " replies:")
+  //   replies.forEach(function(reply, i) {
+  //     console.log("    " + i + ": " + reply)
+  //   })
+  // })
 })
 
-router.get("/redis", (ctx, next) => {
+router.get("/mysql", async (ctx, next) => {
+  // let ctx_querystring = ctx.querystring
+  // const res = await getAsync(ctx_querystring)
+  const res = await User.findAll()
+  ctx.body = res
+})
+
+router.get("/redis", async (ctx, next) => {
   let ctx_querystring = ctx.querystring
-  // console.log("ctx_querystring", ctx_query)
-  client.get(ctx_querystring, function(err, reply) {
-    console.log("我取出来啦", reply.toString()) // Will print `OK`
-  })
+  const res = await getAsync(ctx_querystring)
+  ctx.body = res
+})
+
+router.get("/redisAll", async (ctx, next) => {
+  let ctx_querystring = ctx.querystring
+  const res = await getAsyncAll(ctx_querystring)
+  ctx.body = res
+})
+
+router.get("/asyncredis", async (ctx, next) => {
+  let ctx_querystring = ctx.querystring
+  const res = await getAsync(ctx_querystring)
+  ctx.body = res
 })
 
 router.get("/news", (ctx, next) => {
@@ -96,7 +145,7 @@ router.get("/news", (ctx, next) => {
 })
 
 app.on("error", err => {
-  log.error("server error", err)
+  console.error("server error", err)
 })
 
 app.use(router.routes())
