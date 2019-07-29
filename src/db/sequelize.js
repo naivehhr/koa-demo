@@ -1,7 +1,18 @@
 const Sequelize = require("sequelize")
 
-const sequelize = new Sequelize("koa", "root", "", {
-  host: "localhost",
+// const sequelize = new Sequelize("koa", "root", "", {
+//   host: "localhost",
+//   dialect: "mysql",
+//   pool: {
+//     max: 5,
+//     min: 0,
+//     idle: 10000
+//   }
+// })
+
+const sequelize = new Sequelize("koa", "root", "123456", {
+  host: "127.0.0.1",
+  port: "3309",
   dialect: "mysql",
   pool: {
     max: 5,
@@ -28,13 +39,13 @@ const User = sequelize.define("user", {
   }
 })
 
-User.sync({force: false}).then(() => {
-  // 表已创建
-  return User.create({
-    firstName: "John",
-    lastName: "Hancock"
-  })
-})
+// User.sync({force: false}).then(() => {
+//   // 表已创建
+//   return User.create({
+//     firstName: "John",
+//     lastName: "Hancock"
+//   })
+// })
 
 module.exports = {
   sequelize,

@@ -7,7 +7,7 @@ const redis = require("redis")
 const asyncRedis = require("async-redis")
 const {promisify} = require("util")
 const {sequelize, User} = require("./db/sequelize")
-// const UserModule = require('./model/User')
+const Project = require('./model/Project')
 const config = {
   host: "localhost",
   user: "root",
@@ -93,7 +93,8 @@ router.get("/mysql", async (ctx, next) => {
   // let ctx_querystring = ctx.querystring
   // const res = await getAsync(ctx_querystring)
   const res = await User.findAll()
-  ctx.body = res
+  const t = await Project.findAll()
+  ctx.body = t
 })
 
 router.get("/redis", async (ctx, next) => {
