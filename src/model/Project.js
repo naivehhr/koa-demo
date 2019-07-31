@@ -12,12 +12,12 @@ Project.init(
   {sequelize, modelName: "project"}
 )
 
-Project.sync({force: false}).then(() => {
-  // 表已创建
-  return Project.create({
-    title: "John",
-    description: "Hancock"
-  })
-})
+// Project.sync({force: false}).then(() => {
+//   // 表已创建
+//   return Project.create({
+//     title: "John",
+//     description: "Hancock"
+//   })
+// })
 
 module.exports = Project
